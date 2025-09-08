@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Apology Website</title>
+  <style>
+    body {
+      background-color: #ffdab9;
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      display: flex; justify-content: center; align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .screen { display: none; width: 100%; height: 100%; padding: 20px; }
+    .active { display: block; }
+    .box {
+      background: rgba(255, 250, 240, 0.9);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 600px; margin: auto;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #ffb6c1;
+      border: none; border-radius: 6px;
+      cursor: pointer;
+    }
+    .box {
+    margin: auto;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.12);
+    border-radius: 16px;
+    background: rgba(255, 250, 240, 0.95);
+    padding: 32px 24px;
+    max-width: 500px;
+    text-align: center;
+}
+    button:hover { background: #ff99a2; }
+    iframe { width: 100%; height: 300px; border: none; border-radius: 8px; }
+    canvas { background: #ffe4e1; border: 2px solid #ffb6c1; }
+  </style>
+  
+</head>
+<body>
+  <!-- Screen 1: DOB -->
+  <div id="screen1" class="screen active">
+    <div class="box">
+      <h2>Dost ka birthday</h2>
+      <input type="date" id="dob"><br>
+      <button onclick="checkDOB()">Submit</button>
+      <p id="error" style="color:peachpuff; display:none;">Date of birth bhi bhul gyi kya itna gussa hai merese</p>
+    </div>
+  </div>
+
+  <!-- Screen 2: Apology + Song -->
+  <div id="screen2" class="screen">
+    <div class="box">
+      <h2>Sorry, sorry yrr tujhe jyada hi hurt krr diya maaf krde plzz</h2>
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/mfEQgoVi7P4?si=Hdb9y57Xb5gHdvW1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <button onclick="nextScreen(3)">Next</button>
+    </div>
+  </div>
+
+  <!-- Screen 3: Game -->
+  <div id="screen3" class="screen">
+    <div class="box">
+      <p>Catch 10 hearts to continue 💖</p>
+      <p>Hearts caught: <span id="score">0</span>/10</p>
+      <canvas id="gameCanvas" width="300" height="400"></canvas>
+    </div>
+  </div>
+
+  <!-- Screen 4: Final Note -->
+  <div id="screen4" class="screen">
+    <div class="box">
+      <h1>SORRY MUSKAN</h1>
+      <p>I'm deeply sorry for hurting you. Please forgive me 💕</p>
+    </div>
+  </div>
+
+  <script>
+    // Switch screens
+    function nextScreen(n) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen'+n).classList.add('active');
+      if(n === 3) startGame();
+    }
+
+    // DOB check
+    function checkDOB() {
+      const dob = document.getElementById('dob').value;
+      if(dob === "2005-10-16") {
+        nextScreen(2);
+      } else {
+        document.getElementById('error').style.display = 'block';
+      }
+    }
+
+    // Game
+    let canvas, ctx, basketX, score, hearts, basketWidth = 60, basketHeight = 20;
+    function startGame() {
+      canvas = document.getElementById('gameCanvas');
+      ctx = canvas.getContext('2d');
+      basketX = (canvas.width - basketWidth)/2;
+      score = 0; hearts = [];
+      document.getElementById('score').textContent = score;
+      setInterval(addHeart, 1000);
+      document.addEventListener('keydown', moveBasket);
+      updateGame();
+    }
+    function moveBasket(e) {
+      if(e.keyCode===37) basketX = Math.max(0, basketX-20);
+      if(e.keyCode===39) basketX = Math.min(canvas.width-basketWidth, basketX+20);
+    }
+    function addHeart() {
+      hearts.push({x: Math.random()*(canvas.width-30)+15, y:0, speed: Math.random()*1.5+1.5});
+    }
+    function drawHeart(x,y) {
+      ctx.fillStyle='#ff69b4';
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.bezierCurveTo(x, y-8, x-15, y-10, x-15, y-22);
+      ctx.bezierCurveTo(x-15, y-33, x, y-33, x, y-22);
+      ctx.bezierCurveTo(x, y-33, x+15, y-33, x+15, y-22);
+      ctx.bezierCurveTo(x+15, y-10, x, y-8, x, y);
+      ctx.fill();
+    }
+    function updateGame() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // Basket
+      ctx.fillStyle='#ff69b4';
+      ctx.fillRect(basketX, canvas.height-basketHeight, basketWidth, basketHeight);
+      // Hearts
+      for(let i=hearts.length-1;i>=0;i--) {
+        let h=hearts[i]; h.y+=h.speed; drawHeart(h.x,h.y);
+        if(h.y+10>=canvas.height-basketHeight) {
+          if(h.x>basketX && h.x<basketX+basketWidth) {
+            score++; document.getElementById('score').textContent=score;
+            if(score>=10){ nextScreen(4); return; }
+          }
+          hearts.splice(i,1);
+        }
+      }
+      requestAnimationFrame(updateGame);
+    }
+  </script>
+</body>
+</html>
